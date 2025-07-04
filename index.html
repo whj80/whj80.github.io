@@ -2,60 +2,129 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>훈련기관 지도</title>
+    <title>관내 훈련기관 지도</title>
     <style>
-        #map {
-            width: 100%;
-            height: 500px;
+        #map { width: 100%; height: 500px; }
+        .category-filter {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 5px;
+        }
+        .category-filter label {
+            margin-right: 10px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <h1>관내 직업훈련기관 지도</h1>
-    <div id="map"></div>
    
+    <!-- 직종별 필터 -->
+    <div class="category-filter">
+        <label><input type="checkbox" value="IT" checked> IT</label>
+        <label><input type="checkbox" value="건축시공" checked> 건축시공</label>
+        <label><input type="checkbox" value="요양" checked> 요양</label>
+        <label><input type="checkbox" value="간호조무" checked> 간호조무</label>
+        <label><input type="checkbox" value="아이돌봄" checked> 아이돌봄</label>
+        <label><input type="checkbox" value="기계제어" checked> 기계제어</label>
+        <label><input type="checkbox" value="조리" checked> 조리</label>
+        <label><input type="checkbox" value="미용" checked> 미용</label>
+        <label><input type="checkbox" value="애견미용" checked> 애견미용</label>
+        <!-- 필요한 직종 더 추가 -->
+    </div>
+    <div id="map"></div>
     <!-- 카카오맵 API 사용 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=6aca95ac3e00dd47c115ad401ec52665"></script>
-    <script>
-        var container = document.getElementById('map');
-        var options = {
+ // 지도 초기화
+        var mapContainer = document.getElementById('map');
+        var mapOption = {
             center: new kakao.maps.LatLng(37.4981, 126.7666), // 부천시 중심 좌표
-            level: 3 // 지도 확대 레벨
+            level: 3
         };
-        var map = new kakao.maps.Map(container, options);
+        var map = new kakao.maps.Map(mapContainer, mapOption);
        
-        // 훈련기관 정보 (예시)
-        var positions = [
-            {
-                title: 'A 직업훈련학교',
-                latlng: new kakao.maps.LatLng(33.450705, 126.570677),
-                content: '<div style="padding:5px;">A 직업훈련학교<br>직종: IT, 디자인<br>연락처: 02-123-4567</div>'
-            },
-            {
-                title: 'B 직업훈련센터',
-                latlng: new kakao.maps.LatLng(33.450936, 126.569477),
-                content: '<div style="padding:5px;">B 직업훈련센터<br>직종: 요리, 제과제빵<br>연락처: 02-234-5678</div>'
-            }
-        ];
+        // 마커 배열
+        var markers = [];
        
-        // 마커와 인포윈도우 생성
-        for (var i = 0; i < positions.length; i ++) {
-            var marker = new kakao.maps.Marker({
-                map: map,
-                position: positions[i].latlng,
-                title: positions[i].title
-            });
-           
-            var infowindow = new kakao.maps.InfoWindow({
-                content: positions[i].content
-            });
-           
-            // 클로저를 이용해 마커와 인포윈도우 연결
-            (function(marker, infowindow) {
-                kakao.maps.event.addListener(marker, 'click', function() {
-                    infowindow.open(map, marker);
+        // JSON 파일에서 데이터 불러오기
+        fetch('훈련기관데이터(v.1).json')
+            .then(response => response.json())
+            .then(data => {
+                // 데이터 로드 성공
+                console.log('데이터 로드 성공:', data);
+               
+                // 초기 마커 표시 (모든 카테고리)
+                var checkboxes = document.querySelectorAll('input[type=checkbox]');
+                var selectedCategories = [];
+                checkboxes.forEach(function(cb) {
+                    if (cb.checked) selectedCategories.push(cb.value);
                 });
-            })(marker, infowindow);
+                createMarkers(data, selectedCategories);
+               
+                // 체크박스 이벤트 연결
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        var selected = [];
+                        checkboxes.forEach(function(cb) {
+                            if (cb.checked) selected.push(cb.value);
+                        });
+                        createMarkers(data, selected);
+                    });
+                });
+            })
+            .catch(error => console.error('데이터 로드 실패:', error));
+       
+        // 마커 생성 함수
+        function createMarkers(centers, categoryFilter) {
+            // 기존 마커 제거
+            markers.forEach(function(marker) {
+                marker.setMap(null);
+            });
+            markers = [];
+           
+            // 필터에 맞는 마커만 생성
+            centers.forEach(function(center) {
+                // 직종 필드명이 JSON 파일에 맞게 수정 (예: '직종' 또는 'category')
+                var centerCategory = center.직종 || center.category;
+               
+                if (categoryFilter.includes(centerCategory)) {
+                    var markerPosition = new kakao.maps.LatLng(
+                        parseFloat(center.위도 || center.lat),
+                        parseFloat(center.경도 || center.lng)
+                    );
+                   
+                    var marker = new kakao.maps.Marker({
+                        map: map,
+                        position: markerPosition,
+                        title: center.훈련기관명 || center.name
+                    });
+                   
+                    // 정보창 내용
+                    var content = '<div style="padding:5px;width:200px;">' +
+                        '<strong>' + (center.훈련기관명 || center.name) + '</strong><br>' +
+                        '직종: ' + centerCategory + '<br>' +
+                        '주소: ' + (center.주소 || center.address) + '<br>' +
+                        '연락처: ' + (center.연락처 || center.contact) + '<br>';
+                   
+                    if (center.웹사이트 || center.website) {
+                        content += '<a href="' + (center.웹사이트 || center.website) +
+                            '" target="_blank">웹사이트 방문</a>';
+                    }
+                   
+                    content += '</div>';
+                   
+                    var infowindow = new kakao.maps.InfoWindow({
+                        content: content
+                    });
+                   
+                    kakao.maps.event.addListener(marker, 'click', function() {
+                        infowindow.open(map, marker);
+                    });
+                   
+                    markers.push(marker);
+                }
+            });
         }
     </script>
 </body>

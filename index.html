@@ -43,11 +43,7 @@
                 center: new kakao.maps.LatLng(37.4981, 126.7666), // 부천시 중심 좌표
                 level: 6
             };
-            var map = new kakao.maps.Map(mapContainer, mapOption);
-           
-            var markers = [];
-            var bounds = new
-        kakao.maps.LatLngBounds();        
+            var map = new kakao.maps.Map(mapContainer, mapOption);   
            
             fetch('훈련기관데이터_v1.json')
                 .then(response => response.json())

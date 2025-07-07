@@ -103,9 +103,10 @@
                         var marker = new kakao.maps.Marker({
                             map: map,
                             position: markerPosition,
-                            title: center.훈련기관명 || center.name
+                            title: center.훈련기관명 || center.name,
+                            image: markerImage
                         });
-                       
+                            
                         var content = '<div style="padding:5px;width:200px;">' +
                             '<strong>' + (center.훈련기관명 || center.name) + '</strong><br>' +
                             '직종: ' + centerCategory + '<br>' +

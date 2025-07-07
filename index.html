@@ -83,7 +83,23 @@
                             parseFloat(center.위도 || center.lat),
                             parseFloat(center.경도 || center.lng)
                         );
-                       
+                        // 마커 이미지 경로 및 크기 지정
+                        var imageSrc = '';  // 마커 이미지 URL (직종별로 다르게 설정)
+                        if (centerCategory === 'IT') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_blue.png';} 
+                        else if (centerCategory === '건축시공') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_brown.png';} 
+                        else if (centerCategory === '요양') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_gray.png';} 
+                        else if (centerCategory === '간호조무') {imageSrc = 'https://https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_skyblue.png';}
+                        else if (centerCategory === '아이돌봄') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_yellow.png';}
+                        else if (centerCategory === '기계제어') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_green.png';}
+                        else if (centerCategory === '조리') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_orange.png';}
+                        else if (centerCategory === '미용') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_purple.png';}
+                        else if (centerCategory === '애견미용') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_pink.png';}
+                        else {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_red.png';}
+
+                        var imageSize = new kakao.maps.Size(24, 35);  // 마커 크기 조절 (작게)
+                        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+                        
+                        // 마커 생성
                         var marker = new kakao.maps.Marker({
                             map: map,
                             position: markerPosition,

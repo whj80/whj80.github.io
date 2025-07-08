@@ -118,12 +118,19 @@
   centersWithDistance.sort(function(a, b) {
     return a.distance - b.distance;
   });
- 
+ console.log("정렬된 기관 수:", centersWithDistance.length);
+                // 디버깅용
+                // 기존 윈도우 모두 닫기
+                if (openInfowindow) {
+                    openInfowindow.close();
+                    openInfowindow = null;
+                }
   // 가장 가까운 5개 기관 강조 표시
+                var infowindows = []; // 인포윈도우 배열 추가
   for (var i = 0; i < Math.min(5, centersWithDistance.length); i++) {
     var marker = centersWithDistance[i].marker;
     var distance = centersWithDistance[i].distance;
-   
+    console.log("가까운 기관 #" + (i+1) + ":", marker.getTitle(), "거리:", distance.toFixed(1) + "km"); // 디버깅용
     // 거리 정보를 포함한 인포윈도우 표시
     var content = '<div style="padding:5px;width:200px;">' +
       '<strong>' + marker.getTitle().split(':')[1] + '</strong><br>' +
@@ -135,7 +142,7 @@
     });
    
     infowindow.open(map, marker);
-   
+    infowindows.push(infowindow); // 배열에 추가가
     // 가까운 기관 마커 크게 표시
     var originalImage = marker.getImage();
     var newSize = new kakao.maps.Size(

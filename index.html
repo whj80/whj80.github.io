@@ -162,10 +162,10 @@
                             '직종: ' + centerCategory + '<br>' +
                             '주소: ' + (center.주소 || center.address) + '<br>' +
                             '연락처: ' + (center.연락처 || center.contact) + '<br>'
-                            '웹사이트: ' + (center.웹사이트 || center.website) + '<br>';
+                            '홈페이지: ' + (center.홈페이지 || center.website) + '<br>';
                        
-                        if (center.웹사이트 || center.website) {
-                            content += '<a href="' + (center.웹사이트 || center.website) +
+                        if (center.홈페이지 || center.website) {
+                            content += '<a href="' + (center.홈페이지 || center.website) +
                                 '" target="_blank">웹사이트 방문</a>';
                         }
                        

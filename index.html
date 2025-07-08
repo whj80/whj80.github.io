@@ -139,11 +139,10 @@
                 .catch(error => console.error('데이터 로드 실패:', error));
            
             function createMarkers(centers, categoryFilter) {
-                markers.forEach(function(marker) {
-                    marker.setMap(null);
-                });
+                markers.forEach(function(marker.setMap(null));
                 markers = [];
-               
+                bounds = new
+                    kakao.maps.LatLngBounds();
                 centers.forEach(function(center) {
                     var centerCategory = center.직종 || center.category;
                    
@@ -152,6 +151,7 @@
                             parseFloat(center.위도 || center.lat),
                             parseFloat(center.경도 || center.lng)
                         );
+                        bounds.extend(markerposition);
                         // 마커 이미지 경로 및 크기 지정
                         var imageSrc = '';  // 마커 이미지 URL (직종별로 다르게 설정)
                         if (centerCategory === 'IT') {imageSrc = 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_blue.png';} 

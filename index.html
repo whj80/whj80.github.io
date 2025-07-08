@@ -174,10 +174,19 @@
                         var infowindow = new kakao.maps.InfoWindow({
                             content: content
                         });
-                       
+                         // 토글 기능 적용한 마커 클릭 이벤트
                         kakao.maps.event.addListener(marker, 'click', function() {
-                            infowindow.open(map, marker);
-                        });
+                            if (openInfowindow === infowindow) {
+                                infowindow.close();
+                                openInfowindow = null;
+                            } else {
+                                if (openInfowindow) {
+                                    openInfowindow.close();
+                                }
+                                infowindow.open(map, marker);
+                                openInfowindow = infowindow;
+                            }
+                        })
                        
                         markers.push(marker);
                     }

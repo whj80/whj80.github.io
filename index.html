@@ -45,6 +45,48 @@
             };
             var map = new kakao.maps.Map(mapContainer, mapOption);   
             var markers = [];
+                // 지도 확대/축소 이벤트 리스너 추가 (여기에 추가!)
+    kakao.maps.event.addListener(map, 'zoom_changed', function() {
+        updateMarkerSizes();
+    });
+   
+    // 마커 크기 업데이트 함수 (여기에 추가!)
+    function updateMarkerSizes() {
+        var currentLevel = map.getLevel();
+        var newWidth, newHeight;
+       
+        if (currentLevel <= 3) {
+            newWidth = 48;
+            newHeight = 70;
+        } else if (currentLevel <= 6) {
+            newWidth = 36;
+            newHeight = 52;
+        } else {
+            newWidth = 24;
+            newHeight = 35;
+        }
+       
+        markers.forEach(function(marker) {
+            var category = marker.getTitle().split(':')[0]; // 마커에 저장한 카테고리 정보
+            var imageSrc = getMarkerImageSrc(category);
+            var newImageSize = new kakao.maps.Size(newWidth, newHeight);
+            var markerImage = new kakao.maps.MarkerImage(imageSrc, newImageSize);
+            marker.setImage(markerImage);
+        });
+    }
+               // 직종별 이미지 경로 반환 함수 (여기에 추가!)
+    function getMarkerImageSrc(category) {
+        if (category === 'IT') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_blue.png'; }
+        else if (category === '건축시공') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_brown.png'; }
+        else if (category === '요양') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_gray.png'; }
+        else if (category === '간호조무') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_skyblue.png'; }
+        else if (category === '아이돌봄') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_yellow.png'; }
+        else if (category === '기계제어') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_green.png'; }
+        else if (category === '조리') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_orange.png'; }
+        else if (category === '미용') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_purple.png'; }
+        else if (category === '애견미용') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_pink.png'; }
+        else { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_red.png'; }
+    }
             fetch('훈련기관데이터_v1.json')
                 .then(response => response.json())
                 .then(data => {
@@ -131,6 +173,9 @@
                         markers.push(marker);
                     }
                 });
+                  // 모든 마커가 보이도록 지도 영역 조정
+        if (markers.length > 0) {
+            map.setBounds(bounds);
             }
         });
     </script>

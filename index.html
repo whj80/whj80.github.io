@@ -166,9 +166,9 @@
                 });
                
                  console.log("정렬된 기관 수:", centersWithDistance.length);
-    console.log("첫 번째 기관:", centersWithDistance[0]);
-    console.log("두 번째 기관:", centersWithDistance.length > 1 ? centersWithDistance[1] : "없음");
-    console.log("세 번째 기관:", centersWithDistance.length > 2 ? centersWithDistance[2] : "없음");
+                 console.log("첫 번째 기관:", centersWithDistance[0]);
+                 console.log("두 번째 기관:", centersWithDistance.length > 1 ? centersWithDistance[1] : "없음");
+                 console.log("세 번째 기관:", centersWithDistance.length > 2 ? centersWithDistance[2] : "없음");
                 // 기존 인포윈도우 모두 닫기
                 if (openInfowindow) {
                     openInfowindow.close();
@@ -311,7 +311,6 @@
             }
         });
         console.log('위도/경도 정보가 있는 데이터 개수:', validDataCount);
-                .then(response => {
                     if (!response.ok) { // HTTP 응답이 성공(200 OK)이 아니면 에러 발생
                         throw new Error('훈련기관데이터_v1.json 파일을 찾을 수 없거나 로드에 실패했습니다. 상태 코드: ' + response.status);
                     }

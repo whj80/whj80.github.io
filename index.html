@@ -2,20 +2,31 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>부천시 직업훈련기관 지도</title>
-    <style>
-        #map { width: 100%; height: 700px; }
-        .category-filter {
-            margin: 10px 0;
-            padding: 10px;
-            background: #f8f8f8;
-            border-radius: 5px;
-        }
-        .category-filter label {
-            margin-right: 10px;
-            cursor: pointer;
-        }
-    </style>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>부천시 직업훈련기관 지도</title>
+  <style>
+    #map {
+      width: 100%;
+      height: 700px;
+    }
+    @media (max-width: 768px) {
+      #map {
+        height: 400px;
+      }
+    }
+    @media (max-width: 480px) {
+      #map {
+        height: 300px;
+      }
+    }
+    /* 필터 버튼 등도 터치하기 편하게 스타일 조절 가능 */
+    .category-filter label {
+      font-size: 16px;
+      padding: 8px 12px;
+      display: inline-block;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
     <h1>부천시 직업훈련기관 지도</h1>

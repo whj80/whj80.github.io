@@ -141,111 +141,419 @@
                 }
             }
 // 가까운 훈련기관 찾기 및 거리 계산 함수
-function findNearbyTrainingCenters(userPosition) {
-    // 모든 마커와의 거리 계산
-    var centersWithDistance = [];
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>부천시 직업훈련기관 지도</title>
+    <style>
+        #map {
+            width: 100%;
+            height: 700px;
+        }
+        @media (max-width: 768px) {
+            #map {
+                height: 400px;
+            }
+        }
+        @media (max-width: 480px) {
+            #map {
+                height: 300px;
+            }
+        }
+        .category-filter {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 5px;
+        }
+        .category-filter label {
+            font-size: 16px;
+            padding: 8px 12px;
+            display: inline-block;
+            user-select: none;
+        }
+        #findNearbyBtn {
+            padding: 10px 15px;
+            margin: 10px;
+            background: #0078ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        #findNearbyBtn:hover {
+            background: #0056b3;
+        }
+        /* 인포윈도우 스타일 (선택 사항, 필요시 추가) */
+        .info-window {
+            padding: 10px;
+            width: 250px; /* 인포윈도우 너비 조정 */
+        }
+        .info-window strong {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .info-window .info-item {
+            margin: 5px 0;
+        }
+        .info-window .website-link {
+            display: inline-block;
+            margin-top: 8px;
+            color: #0078ff;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+ <h1>부천시 직업훈련기관 지도</h1>
    
+    <!-- 직종별 필터 -->
+    <div class="category-filter">
+        <label><input type="checkbox" value="IT" checked> IT</label>
+        <label><input type="checkbox" value="건축시공" checked> 건축시공</label>
+        <label><input type="checkbox" value="요양" checked> 요양</label>
+        <label><input type="checkbox" value="간호조무" checked> 간호조무</label>
+        <label><input type="checkbox" value="아이돌봄" checked> 아이돌봄</label>
+        <label><input type="checkbox" value="기계제어" checked> 기계제어</label>
+        <label><input type="checkbox" value="조리" checked> 조리</label>
+        <label><input type="checkbox" value="미용" checked> 미용</label>
+        <label><input type="checkbox" value="애견미용" checked> 애견미용</label>
+    </div>
+    <button id="findNearbyBtn" style="padding: 10px; margin: 10px; background: #0078ff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        내 주변 훈련기관 찾기
+    </button>
+    <div id="map"></div>
+  <!-- 카카오맵 API 불러오기 (autoload=false 옵션 추가) -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=6aca95ac3e00dd47c115ad401ec52665&autoload=false"></script>
+    <script>
+        kakao.maps.load(function() {
+            var mapContainer = document.getElementById('map');
+            var mapOption = {
+                center: new kakao.maps.LatLng(37.4981, 126.7666), // 부천시 중심 좌표
+                level: 6
+            };
+            var map = new kakao.maps.Map(mapContainer, mapOption);  
+            var markers = [];
+            var bounds = new kakao.maps.LatLngBounds(); // 지도 범위 객체 추가
+           
+            // 현재 열려있는 인포윈도우 추적 변수 추가
+            var openInfowindow = null;
+            // 가까운 기관 인포윈도우 배열 추가
+            var nearbyInfowindows = [];
+           
+            // 현재 위치 가져오기 함수
+            function getCurrentLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            // 위치 가져오기 성공
+                            var userLat = position.coords.latitude;
+                            var userLng = position.coords.longitude;
+                           
+                            // 사용자 위치로 지도 이동
+                            var userPosition = new kakao.maps.LatLng(userLat, userLng);
+                            map.setCenter(userPosition);
+                           
+                            // 사용자 위치 마커 표시
+                            var userMarker = new kakao.maps.Marker({
+                                map: map,
+                                position: userPosition,
+                                image: new kakao.maps.MarkerImage(
+                                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                                    new kakao.maps.Size(24, 35)
+                                )
+                            });
+                           
+                            // 가까운 훈련기관 찾기
+                            findNearbyTrainingCenters(userPosition);
+                        },
+                        function(error) {
+                            // 위치 가져오기 실패
+                            alert('위치 정보를 가져오는데 실패했습니다: ' + error.message);
+                        }
+                    );
+                } else {
+                    alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.');
+                }
+            }
+// 가까운 훈련기관 찾기 및 거리 계산 함수
+function findNearbyTrainingCenters(userPosition) {
+    var centersWithDistance = [];
+
     markers.forEach(function(marker) {
         var markerPosition = marker.getPosition();
         var distance = calculateDistance(
             userPosition.getLat(), userPosition.getLng(),
             markerPosition.getLat(), markerPosition.getLng()
         );
-       
+
         centersWithDistance.push({
             marker: marker,
             distance: distance,
             title: marker.getTitle()
         });
     });
-   
-    // 거리순으로 정렬
+
     centersWithDistance.sort(function(a, b) {
         return a.distance - b.distance;
     });
-   
+
     console.log("정렬된 기관 수:", centersWithDistance.length);
-   
+
     // 기존 인포윈도우 모두 닫기
     if (openInfowindow) {
         openInfowindow.close();
         openInfowindow = null;
     }
-   
+
     // 이전에 열린 가까운 기관 인포윈도우 모두 닫기
     nearbyInfowindows.forEach(function(infowindow) {
         infowindow.close();
     });
     nearbyInfowindows = [];
-   
-    // 가장 가까운 5개 기관 강조 표시
+
+    // 모든 마커 크기 원래대로 복원
+    markers.forEach(function(marker) {
+        var category = marker.getTitle().split(':')[0];
+        var imageSrc = getMarkerImageSrc(category);
+        var imageSize = new kakao.maps.Size(80, 80);
+        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+        marker.setImage(markerImage);
+    });
+
+    // 가까운 5개 기관 강조 표시
     for (var i = 0; i < Math.min(5, centersWithDistance.length); i++) {
         var marker = centersWithDistance[i].marker;
         var distance = centersWithDistance[i].distance;
-        var title = marker.getTitle();
-       
-        // 타이틀에서 기관명 추출 (에러 방지)
-        var instituteName = title;
-        if (title.includes(':')) {
-            instituteName = title.split(':')[1];
-        }
-       
-        console.log("가까운 기관 #" + (i+1) + ":", title, "거리:", distance.toFixed(1) + "km");
-       
-        // 거리 정보를 포함한 인포윈도우 표시
+        var title = centersWithDistance[i].title;
+
+        // 안전하게 기관명 추출
+        var instituteName = title.includes(':') ? title.split(':')[1] : title;
+
+        console.log("가까운 기관 #" + (i + 1) + ":", title, "거리:", distance.toFixed(1) + "km");
+
         var content = '<div style="padding:5px;width:200px;">' +
             '<strong>' + instituteName + '</strong><br>' +
             '내 위치에서 ' + distance.toFixed(1) + 'km<br>' +
             '</div>';
-       
+
         var infowindow = new kakao.maps.InfoWindow({
             content: content
         });
-       
-        // 인포윈도우 토글 기능 추가 - 여기가 수정된 부분!
+
+        // 인포윈도우 토글 기능 추가
         (function(marker, infowindow) {
-            // 인포윈도우 자체에 클릭 이벤트 추가
             kakao.maps.event.addListener(infowindow, 'click', function() {
                 infowindow.close();
-                var index = nearbyInfowindows.indexOf(infowindow);
-                if (index > -1) {
-                    nearbyInfowindows.splice(index, 1);
-                }
+                var idx = nearbyInfowindows.indexOf(infowindow);
+                if (idx > -1) nearbyInfowindows.splice(idx, 1);
             });
-           
-            // 마커 클릭 이벤트도 추가
+
             kakao.maps.event.addListener(marker, 'click', function() {
                 if (nearbyInfowindows.includes(infowindow) && infowindow.getMap()) {
                     infowindow.close();
-                    var index = nearbyInfowindows.indexOf(infowindow);
-                    if (index > -1) {
-                        nearbyInfowindows.splice(index, 1);
-                    }
+                    var idx = nearbyInfowindows.indexOf(infowindow);
+                    if (idx > -1) nearbyInfowindows.splice(idx, 1);
                 } else {
                     infowindow.open(map, marker);
                     nearbyInfowindows.push(infowindow);
                 }
             });
         })(marker, infowindow);
-       
+
         infowindow.open(map, marker);
         nearbyInfowindows.push(infowindow);
-       
+
         // 가까운 기관 마커 크게 표시
         var originalImage = marker.getImage();
         var newSize = new kakao.maps.Size(
             originalImage.getSize().width * 1.3,
             originalImage.getSize().height * 1.3
         );
-       
+
         var highlightImage = new kakao.maps.MarkerImage(
             originalImage.src,
             newSize
         );
-       
+
         marker.setImage(highlightImage);
     }
 }
+
+// 두 지점 간의 거리 계산 함수 (Haversine 공식)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371; // 지구 반경 (km)
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    var distance = R * c; // 킬로미터 단위 거리
+   
+    return distance;
+}
+
+// 버튼 이벤트 리스너 등록
+document.getElementById('findNearbyBtn').addEventListener('click', getCurrentLocation);
+ // 지도 확대/축소 이벤트 리스너 추가
+            kakao.maps.event.addListener(map, 'zoom_changed', function() {
+                updateMarkerSizes();
+            });
+           
+            // 마커 크기 업데이트 함수
+            function updateMarkerSizes() {
+                var currentLevel = map.getLevel();
+                var newWidth, newHeight;
+               
+                if (currentLevel <= 3) {
+                    newWidth = 100;
+                    newHeight = 100;
+                } else if (currentLevel <= 6) {
+                    newWidth = 80;
+                    newHeight = 80;
+                } else {
+                    newWidth = 60;
+                    newHeight = 60;
+                }
+               
+                markers.forEach(function(marker) {
+                    var category = marker.getTitle().split(':')[0]; // 마커에 저장한 카테고리 정보
+                    var imageSrc = getMarkerImageSrc(category);
+                    var newImageSize = new kakao.maps.Size(newWidth, newHeight);
+                    var markerImage = new kakao.maps.MarkerImage(imageSrc, newImageSize);
+                    marker.setImage(markerImage);
+                });
+            }
+           
+            // 직종별 이미지 경로 반환 함수
+            function getMarkerImageSrc(category) {
+                if (category === 'IT') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_blue.png'; }
+                else if (category === '건축시공') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_brown.png'; }
+                else if (category === '요양') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_gray.png'; }
+                else if (category === '간호조무') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_skyblue.png'; }
+                else if (category === '아이돌봄') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_yellow.png'; }
+                else if (category === '기계제어') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_green.png'; }
+                else if (category === '조리') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_orange.png'; }
+                else if (category === '미용') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_purple.png'; }
+                else if (category === '애견미용') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_pink.png'; }
+                else { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_red.png'; }
+            }
+  fetch('훈련기관데이터_v1.json')
+                .then(response => {
+                    if (!response.ok) { // HTTP 응답이 성공(200 OK)이 아니면 에러 발생
+                        throw new Error('훈련기관데이터_v1.json 파일을 찾을 수 없거나 로드에 실패했습니다. 상태 코드: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('데이터 로드 성공:', data);
+                   
+                    var checkboxes = document.querySelectorAll('input[type=checkbox]');
+                    var selectedCategories = [];
+                    checkboxes.forEach(function(cb) {
+                        if (cb.checked) selectedCategories.push(cb.value);
+                    });
+                    createMarkers(data, selectedCategories); // 초기 마커 생성
+                   
+                    checkboxes.forEach(function(checkbox) {
+                        checkbox.addEventListener('change', function() {
+                            var selected = [];
+                            checkboxes.forEach(function(cb) {
+                                if (cb.checked) selected.push(cb.value);
+                            });
+                            createMarkers(data, selected); // 필터 변경 시 마커 재생성
+                        });
+                    });
+                })
+                .catch(error => console.error('데이터 로드 실패:', error));
+           
+            // 마커 생성 및 필터링 함수
+            function createMarkers(centers, categoryFilter) {
+                markers.forEach(function(marker) {
+                    marker.setMap(null); // 기존 마커 제거
+                });
+                markers = []; // 마커 배열 초기화
+                bounds = new kakao.maps.LatLngBounds(); // 지도 범위 초기화
+               
+                centers.forEach(function(center) {
+                    var centerCategory = center.직종 || center.category;
+                   
+                    if (categoryFilter.includes(centerCategory)) {
+                        var markerPosition = new kakao.maps.LatLng(
+                            parseFloat(center.위도 || center.lat),
+                            parseFloat(center.경도 || center.lng)
+                        );
+                        bounds.extend(markerPosition); // 마커 위치를 지도 범위에 추가
+                       
+                        // 마커 이미지 경로 및 크기 지정
+                        var imageSrc = getMarkerImageSrc(centerCategory); // 직종별 이미지 가져오기
+                        var imageSize = new kakao.maps.Size(80, 80);  // 마커 크기 조절 (크게)
+                        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+                       
+                        // 마커 생성
+                        var marker = new kakao.maps.Marker({
+                            map: map,
+                            position: markerPosition,
+                            title: centerCategory + ': ' + (center.훈련기관명 || center.name), // 마커 타이틀에 카테고리 포함
+                            image: markerImage // 커스텀 마커 이미지 적용
+                        });
+                           
+                        // 인포윈도우 내용 생성
+                        var content = '<div style="padding:5px;width:200px;">' +
+                            '<strong>' + (center.훈련기관명 || center.name) + '</strong><br>' +
+                            '직종: ' + centerCategory + '<br>' +
+                            '주소: ' + (center.주소 || center.address) + '<br>' +
+                            '연락처: ' + (center.연락처 || center.contact) + '<br>';
+                       
+                        if (center.홈페이지 || center.website) { // 홈페이지 필드명 확인
+                            content += '<a href="' + (center.홈페이지 || center.website) +
+                                '" target="_blank" style="color:#0078ff; text-decoration:underline; font-weight:bold;">홈페이지 방문</a>';
+                        }
+                       
+                        content += '</div>';
+                       
+                        var infowindow = new kakao.maps.InfoWindow({
+                            content: content
+                        });
+                       
+                        // 토글 기능 적용한 마커 클릭 이벤트
+                        (function(marker, infowindow) { // 클로저를 이용해 인포윈도우와 마커 연결
+                            kakao.maps.event.addListener(marker, 'click', function() {
+                                if (openInfowindow === infowindow) {
+                                    infowindow.close();
+                                    openInfowindow = null;
+                                } else {
+                                    if (openInfowindow) {
+                                        openInfowindow.close();
+                                    }
+                                    infowindow.open(map, marker);
+                                    openInfowindow = infowindow;
+                                }
+                            });
+                        })(marker, infowindow); // 클로저 즉시 실행
+                       
+                        markers.push(marker); // 생성된 마커를 배열에 추가
+                    }
+                });
+               
+                // 모든 마커가 보이도록 지도 영역 조정 (마커가 있을 경우에만)
+                if (markers.length > 0) {
+                    map.setBounds(bounds);
+                }
+            }
+        }); // kakao.maps.load 끝
+    </script>
+</body>
+</html>
 
 // 두 지점 간의 거리 계산 함수 (Haversine 공식)
 function calculateDistance(lat1, lon1, lat2, lon2) {

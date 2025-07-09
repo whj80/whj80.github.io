@@ -180,17 +180,25 @@
           infowindow.open(map, marker);
           nearbyInfowindows.push(infowindow);
 
-          // 마커 크기 키우기
-          const originalImage = marker.getImage();
-          const newSize = new kakao.maps.Size(
-            originalImage.getSize().width * 1.3,
-            originalImage.getSize().height * 1.3
-          );
-          const highlightImage = new kakao.maps.MarkerImage(
-            originalImage.src,
-            newSize
-          );
-          marker.setImage(highlightImage);
+      // 마커 크기 키우기
+var originalImage = marker.getImage();
+var newSize;
+
+if (originalImage && typeof originalImage.getSize === 'function') {
+    var size = originalImage.getSize();
+    newSize = new kakao.maps.Size(size.width * 1.3, size.height * 1.3);
+} else {
+    // 기본 마커 이미지 크기 지정 (예: 24x35)
+    newSize = new kakao.maps.Size(24 * 1.3, 35 * 1.3);
+}
+
+var imageUrl = (originalImage && typeof originalImage.getUrl === 'function') 
+    ? originalImage.getUrl() 
+    : 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png';
+
+var highlightImage = new kakao.maps.MarkerImage(imageUrl, newSize);
+
+marker.setImage(highlightImage);
 
           // 마커 클릭 시 인포윈도우 토글
           (function (marker, infowindow) {

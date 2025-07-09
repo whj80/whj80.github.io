@@ -143,8 +143,9 @@
            // 가까운 훈련기관 찾기 함수 - 수정된 부분
 function findNearbyTrainingCenters(userPosition) {
     // 디버깅을 위한 로그 추가
+    console.log('함수 실행됨!');
     console.log('마커 개수:', markers.length);
-   
+    
     var centersWithDistance = [];
    
     // 모든 마커에 대해 거리 계산
@@ -401,6 +402,8 @@ function findNearbyTrainingCenters(userPosition) {
                 // 모든 마커가 보이도록 지도 영역 조정 (마커가 있을 경우에만)
                 if (markers.length > 0) {
                     map.setBounds(bounds);
+                }
+                 console.log('생성된 마커 수:', markers.length);
                 }
             }
         }); // kakao.maps.load 끝

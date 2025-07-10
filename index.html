@@ -111,6 +111,9 @@
         <label><input type="checkbox" value="애견미용" checked> 애견미용</label>
     </div>
     <button id="findNearbyBtn">내 주변 훈련기관 찾기</button>
+        <button id="deselectAllBtn" style="padding: 10px; margin: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        전체 선택 해제
+    </button>
     <div id="map"></div>
 
     <!-- 카카오맵 API 불러오기 -->
@@ -399,7 +402,16 @@
            
             // 버튼 클릭 이벤트 연결
             document.getElementById('findNearbyBtn').addEventListener('click', getCurrentLocation);
+// 새롭게 추가할 '전체 선택 해제' 버튼 이벤트 연결
+        document.getElementById('deselectAllBtn').addEventListener('click', function() {
+            var checkboxes = document.querySelectorAll('input[type=checkbox]');
+            checkboxes.forEach(function(cb) {
+                cb.checked = false; // 모든 체크박스 해제
+            });
+            // 모든 마커를 지도에서 제거 (필터링된 결과가 없도록)
+            createMarkers(data, []); // 빈 배열을 넘겨서 모든 마커 제거
         });
+    }); // kakao.maps.load 끝
     </script>
 </body>
 </html>

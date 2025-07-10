@@ -81,7 +81,7 @@
     <!-- 카카오맵 API 불러오기 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=6aca95ac3e00dd47c115ad401ec52665&autoload=false"></script>
     <script>
-        // 전역 변수로 데이터 저장 (버튼 이벤트에서 참조하기 위함)
+        // 전역 변수로 데이터 저장
         let jsonData = [];
         
         // 카카오맵 API 로드
@@ -94,11 +94,10 @@
             };
             var map = new kakao.maps.Map(mapContainer, mapOption);  
             var markers = [];
-            var bounds = new kakao.maps.LatLngBounds(); // 지도 범위 객체 추가
+            var bounds = new kakao.maps.LatLngBounds();
            
-            // 현재 열려있는 인포윈도우 추적 변수 추가
+            // 인포윈도우 관련 변수
             var openInfowindow = null;
-            // 가까운 기관 인포윈도우 배열 추가
             var nearbyInfowindows = [];
             // 현재 위치 가져오기 함수
             function getCurrentLocation() {
@@ -153,7 +152,7 @@
             
             // 가까운 훈련기관 찾기 함수
             function findNearbyTrainingCenters(userPosition) {
-                console.log('findNearbyTrainingCenters 함수 시작. 현재 마커 개수:', markers.length);
+                console.log('가까운 기관 찾기 시작, 마커 개수:', markers.length);
                 
                 var centersWithDistance = [];
                 
@@ -188,15 +187,6 @@
                 });
                 nearbyInfowindows = [];
                 
-                // 모든 마커 크기 원래대로 복원
-                markers.forEach(function(marker) {
-                    var category = marker.getTitle().split('(')[0].trim(); // 괄호 앞 부분만 추출
-                    var imageSrc = getMarkerImageSrc(category);
-                    var imageSize = new kakao.maps.Size(80, 80);
-                    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-                    marker.setImage(markerImage);
-                });
-                
                 // 가장 가까운 5개 기관 강조 표시
                 for (var i = 0; i < Math.min(5, centersWithDistance.length); i++) {
                     var marker = centersWithDistance[i].marker;
@@ -220,35 +210,31 @@
                         removable: true
                     });
                     
-                    // 인포윈도우 토글 기능 (마커 클릭 시)
-                    (function(marker, infowindow) {
-                        kakao.maps.event.addListener(marker, 'click', function() {
-                            if (infowindow.getMap()) { // 인포윈도우가 열려있으면 닫기
-                                infowindow.close();
-                            } else { // 닫혀있으면 열기
-                                infowindow.open(map, marker);
-                            }
-                        });
-                    })(marker, infowindow);
-                    
-                    infowindow.open(map, marker); // 가까운 기관 인포윈도우는 기본적으로 열린 상태
+                    infowindow.open(map, marker);
                     nearbyInfowindows.push(infowindow);
                     
                     // 마커 크기 키우기 (안전하게 처리)
-                    var originalImage = marker.getImage();
-                    var newSize;
-                    
-                    if (originalImage && typeof originalImage.getSize === 'function') {
-                        var size = originalImage.getSize();
-                        newSize = new kakao.maps.Size(size.width * 1.3, size.height * 1.3);
-                    } else {
-                        // 기본 마커 이미지 크기 지정 (기본 마커일 경우)
-                        newSize = new kakao.maps.Size(24 * 1.3, 35 * 1.3);
+                    try {
+                        var originalImage = marker.getImage();
+                        var newSize = new kakao.maps.Size(24 * 1.3, 35 * 1.3);
+                        var imageUrl = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png';
+                        
+                        if (originalImage && typeof originalImage.getSize === 'function') {
+                            var size = originalImage.getSize();
+                            newSize = new kakao.maps.Size(size.width * 1.3, size.height * 1.3);
+                        }
+                        
+                        if (originalImage && typeof originalImage.getUrl === 'function') {
+                            imageUrl = originalImage.getUrl();
+                        }
+                        
+                        var highlightImage = new kakao.maps.MarkerImage(imageUrl, newSize);
+                        marker.setImage(highlightImage);
+                    } catch (e) {
+                        console.error('마커 이미지 처리 중 오류:', e);
                     }
-                    
-                    var imageUrl = (originalImage && typeof originalImage.getUrl === 'function')
-                        ? originalImage.getUrl()
-                        : 'https://t1.daumcdn.net/
+                }
+            }
             // 직종별 이미지 경로 반환 함수
             function getMarkerImageSrc(category) {
                 // 필터링 시 사용된 직종명과 일치하도록 trim()과 toLowerCase() 적용
@@ -267,7 +253,6 @@
             }
            
             // JSON 데이터 불러와 마커 생성 및 필터링
-            // jsonData 변수에 데이터를 저장하여 전역적으로 접근 가능하게 함
             fetch('훈련기관데이터_v1.json')
                 .then(response => {
                     if (!response.ok) {
@@ -309,14 +294,10 @@
                     const centerCategories = Array.isArray(center.직종) ? center.직종 : [center.직종 || center.category];
                     
                     // 선택된 필터 카테고리(categoryFilter) 중 하나라도 기관의 직종에 포함되는지 확인
-                    // 여기에서 애견미용 필터링 문제 해결을 위해 trim()과 toLowerCase() 추가
                     const normalizedCenterCategories = centerCategories.map(c => String(c).trim().toLowerCase());
                     const normalizedFilter = categoryFilter.map(c => String(c).trim().toLowerCase());
 
                     const hasMatchingCategory = normalizedCenterCategories.some(cat => normalizedFilter.includes(cat));
-
-                    // 필터링 로그 추가 (필요시 주석 해제)
-                    // console.log(`기관: ${center.훈련기관명}, 직종: ${centerCategories}, 필터: ${categoryFilter}, 매칭: ${hasMatchingCategory}`);
 
                     if (hasMatchingCategory) { // 일치하는 카테고리가 하나라도 있다면 마커 생성
                         var markerPosition = new kakao.maps.LatLng(
@@ -418,9 +399,6 @@
                 // 모든 마커를 지도에서 제거 (빈 배열을 넘겨서 필터링)
                 createMarkers(jsonData, []);
             });
-
-            // 초기 로딩 시 모든 마커 표시 (옵션: 모든 체크박스 체크 상태로)
-            // 이 부분은 fetch 성공 후 createMarkers(jsonData, initialSelectedCategories); 에서 처리됨
             
         }); // kakao.maps.load 끝
     </script>

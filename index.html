@@ -36,21 +36,33 @@
     .button-container {
       display: flex; gap: 10px; margin: 10px;
     }
+    #findNearbyBtn, #deselectAllBtn, #closeAllBtn {
+      flex: 1;
+      padding: 12px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
     #findNearbyBtn {
-      flex: 2; padding: 12px; background: #0078ff; color: white;
-      border: none; border-radius: 5px; cursor: pointer;
-      font-size: 16px; font-weight: bold;
+      background: #0078ff;
     }
     #deselectAllBtn {
-      flex: 1; padding: 12px; background: #dc3545; color: white;
-      border: none; border-radius: 5px; cursor: pointer;
-      font-size: 16px;
+      background: #dc3545;
+    }
+    #closeAllBtn {
+      background: #6c757d;
     }
     #findNearbyBtn:hover {
       background: #0056b3;
     }
     #deselectAllBtn:hover {
       background: #c82333;
+    }
+    #closeAllBtn:hover {
+      background: #5a6268;
     }
   </style>
 </head>
@@ -70,9 +82,10 @@
         <label><input type="checkbox" value="애견미용" checked> 애견미용</label>
     </div>
     
-    <!-- 버튼 컨테이너로 감싸서 정렬 -->
+    <!-- 버튼 컨테이너로 감싸서 정렬 (내 주변 기관 정보창 모두 닫기 버튼 추가) -->
     <div class="button-container">
         <button id="findNearbyBtn">내 주변 훈련기관 찾기</button>
+        <button id="closeAllBtn">내 주변 정보창 모두 닫기</button>
         <button id="deselectAllBtn">전체 선택 해제</button>
     </div>
     
@@ -99,6 +112,14 @@
             // 인포윈도우 관련 변수
             var openInfowindow = null;
             var nearbyInfowindows = [];
+            
+            // 내 주변 기관 정보창 모두 닫기 함수
+            function closeAllNearbyInfowindows() {
+                nearbyInfowindows.forEach(function(infowindow) {
+                    infowindow.close();
+                });
+                nearbyInfowindows = [];
+            }
             // 현재 위치 가져오기 함수
             function getCurrentLocation() {
                 if (navigator.geolocation) {
@@ -182,10 +203,8 @@
                     openInfowindow = null;
                 }
                 
-                nearbyInfowindows.forEach(function(infowindow) {
-                    infowindow.close();
-                });
-                nearbyInfowindows = [];
+                // 이전에 열린 가까운 기관 인포윈도우 모두 닫기
+                closeAllNearbyInfowindows();
                 
                 // 가장 가까운 5개 기관 강조 표시
                 for (var i = 0; i < Math.min(5, centersWithDistance.length); i++) {
@@ -235,7 +254,8 @@
                     }
                 }
             }
-            // 직종별 이미지 경로 반환 함수
+            
+                     // 직종별 이미지 경로 반환 함수
             function getMarkerImageSrc(category) {
                 // 필터링 시 사용된 직종명과 일치하도록 trim()과 toLowerCase() 적용
                 const normalizedCategory = String(category).trim().toLowerCase();
@@ -326,7 +346,7 @@
                             image: markerImage
                         });
                             
-                        // 인포윈도우 내용 생성
+                                            // 인포윈도우 내용 생성
                         var content = '<div style="padding:5px;width:200px;">' +
                             '<strong>' + (center.훈련기관명 || center.name) + '</strong><br>' +
                             '직종: ' + centerCategories.join(', ') + '<br>' +
@@ -389,6 +409,9 @@
 
             // 버튼 클릭 이벤트 연결
             document.getElementById('findNearbyBtn').addEventListener('click', getCurrentLocation);
+            
+            // '내 주변 기관 정보창 모두 닫기' 버튼 이벤트 연결 (새로 추가)
+            document.getElementById('closeAllBtn').addEventListener('click', closeAllNearbyInfowindows);
             
             // '전체 선택 해제' 버튼 이벤트 연결
             document.getElementById('deselectAllBtn').addEventListener('click', function() {

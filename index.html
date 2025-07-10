@@ -324,81 +324,87 @@
                     });
                 })
                 .catch(error => console.error('데이터 로드 실패:', error));
-   // 마커 생성 및 필터링 함수
-            function createMarkers(centers, categoryFilter) {
-                markers.forEach(function(marker) {
-                    marker.setMap(null); // 기존 마커 제거
-                });
-                markers = []; // 마커 배열 초기화
-                bounds = new kakao.maps.LatLngBounds(); // 지도 범위 초기화
+          // 마커 생성 및 필터링 함수
+        function createMarkers(centers, categoryFilter) {
+            markers.forEach(function(marker) {
+                marker.setMap(null); // 기존 마커 제거
+            });
+            markers = []; // 마커 배열 초기화
+            bounds = new kakao.maps.LatLngBounds(); // 지도 범위 초기화
+           
+            centers.forEach(function(center) {
+                // center.직종이 배열인지 확인하고, 아니면 단일 요소 배열로 만듦
+                const centerCategories = Array.isArray(center.직종) ? center.직종 : [center.직종 || center.category];
                
-                centers.forEach(function(center) {
-                    var centerCategory = center.직종 || center.category;
+                // 선택된 필터 카테고리(categoryFilter) 중 하나라도 기관의 직종에 포함되는지 확인
+                const hasMatchingCategory = centerCategories.some(cat => categoryFilter.includes(cat));
+
+                if (hasMatchingCategory) { // 일치하는 카테고리가 하나라도 있다면 마커 생성
+                    var markerPosition = new kakao.maps.LatLng(
+                        parseFloat(center.위도 || center.lat),
+                        parseFloat(center.경도 || center.lng)
+                    );
+                    bounds.extend(markerPosition);
                    
-                    if (categoryFilter.includes(centerCategory)) {
-                        var markerPosition = new kakao.maps.LatLng(
-                            parseFloat(center.위도 || center.lat),
-                            parseFloat(center.경도 || center.lng)
-                        );
-                        bounds.extend(markerPosition); // 마커 위치를 지도 범위에 추가
+                    // 마커 이미지: 대표 직종 (첫 번째 직종) 또는 기본 이미지 사용
+                    const primaryCategoryForImage = centerCategories.length > 0 ? centerCategories[0] : '기타'; // '기타'는 getMarkerImageSrc에서 처리
+                    var imageSrc = getMarkerImageSrc(primaryCategoryForImage);
+                    var imageSize = new kakao.maps.Size(80, 80);
+                    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+                   
+                    // 마커 생성
+                    var marker = new kakao.maps.Marker({
+                        map: map,
+                        position: markerPosition,
+                        // 마커 타이틀에 모든 직종을 표시
+                        title: (center.훈련기관명 || center.name) + ' (' + centerCategories.join(', ') + ')',
+                        image: markerImage
+                    });
                        
-                        // 마커 이미지 경로 및 크기 지정
-                        var imageSrc = getMarkerImageSrc(centerCategory); // 직종별 이미지 가져오기
-                        var imageSize = new kakao.maps.Size(80, 80);  // 마커 크기 조절 (크게)
-                        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-                       
-                        // 마커 생성
-                        var marker = new kakao.maps.Marker({
-                            map: map,
-                            position: markerPosition,
-                            title: centerCategory + ': ' + (center.훈련기관명 || center.name), // 마커 타이틀에 카테고리 포함
-                            image: markerImage // 커스텀 마커 이미지 적용
-                        });
-                           
-                        // 인포윈도우 내용 생성
-                        var content = '<div style="padding:5px;width:200px;">' +
-                            '<strong>' + (center.훈련기관명 || center.name) + '</strong><br>' +
-                            '직종: ' + centerCategory + '<br>' +
-                            '주소: ' + (center.주소 || center.address) + '<br>' +
-                            '연락처: ' + (center.연락처 || center.contact) + '<br>';
-                       
-                        if (center.홈페이지 || center.website) { // 홈페이지 필드명 확인
-                            content += '<a href="' + (center.홈페이지 || center.website) +
-                                '" target="_blank" style="color:#0078ff; text-decoration:underline; font-weight:bold;">홈페이지 방문</a>';
-                        }
-                       
-                        content += '</div>';
-                       
-                        var infowindow = new kakao.maps.InfoWindow({
-                            content: content,
-                            removable: true // 닫기 버튼 추가
-                        });
-                       
-                        // 토글 기능 적용한 마커 클릭 이벤트
-                        (function(marker, infowindow) { // 클로저를 이용해 인포윈도우와 마커 연결
-                            kakao.maps.event.addListener(marker, 'click', function() {
-                                if (openInfowindow === infowindow) {
-                                    infowindow.close();
-                                    openInfowindow = null;
-                                } else {
-                                    if (openInfowindow) {
-                                        openInfowindow.close();
-                                    }
-                                    infowindow.open(map, marker);
-                                    openInfowindow = infowindow;
-                                }
-                            });
-                        })(marker, infowindow); // 클로저 즉시 실행
-                       
-                        markers.push(marker); // 생성된 마커를 배열에 추가
+                    // 인포윈도우 내용 생성
+                    var content = '<div style="padding:5px;width:200px;">' +
+                        '<strong>' + (center.훈련기관명 || center.name) + '</strong><br>' +
+                        '직종: ' + centerCategories.join(', ') + '<br>' + // 인포윈도우에 모든 직종 표시
+                        '주소: ' + (center.주소 || center.address) + '<br>' +
+                        '연락처: ' + (center.연락처 || center.contact) + '<br>';
+                   
+                    if (center.홈페이지 || center.website) { // 홈페이지 필드명 확인
+                        content += '<a href="' + (center.홈페이지 || center.website) +
+                            '" target="_blank" style="color:#0078ff; text-decoration:underline; font-weight:bold;">홈페이지 방문</a>';
                     }
-                });
-               
-                // 모든 마커가 보이도록 지도 영역 조정 (마커가 있을 경우에만)
-                if (markers.length > 0) {
-                    map.setBounds(bounds);
+                   
+                    content += '</div>';
+                   
+                    var infowindow = new kakao.maps.InfoWindow({
+                        content: content,
+                        removable: true
+                    });
+                   
+                    // 토글 기능 적용한 마커 클릭 이벤트 (기존과 동일)
+                    (function(marker, infowindow) {
+                        kakao.maps.event.addListener(marker, 'click', function() {
+                            if (openInfowindow === infowindow) {
+                                infowindow.close();
+                                openInfowindow = null;
+                            } else {
+                                if (openInfowindow) {
+                                    openInfowindow.close();
+                                }
+                                infowindow.open(map, marker);
+                                openInfowindow = infowindow;
+                            }
+                        });
+                    })(marker, infowindow);
+                   
+                    markers.push(marker);
                 }
+            });
+           
+            // 모든 마커가 보이도록 지도 영역 조정 (마커가 있을 경우에만)
+            if (markers.length > 0) {
+                map.setBounds(bounds);
             }
+        }
            
             // 버튼 클릭 이벤트 연결
             document.getElementById('findNearbyBtn').addEventListener('click', getCurrentLocation);

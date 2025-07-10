@@ -1,116 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>부천시 직업훈련기관 지도</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Noto Sans KR', sans-serif;
-        }
-        h1 {
-            padding: 15px;
-            margin: 0;
-            background-color: #0078ff;
-            color: white;
-            text-align: center;
-        }
-        #map {
-            width: 100%;
-            height: 700px;
-        }
-        @media (max-width: 768px) {
-            #map {
-                height: 500px;
-            }
-        }
-        @media (max-width: 480px) {
-            #map {
-                height: 400px;
-            }
-            h1 {
-                font-size: 20px;
-            }
-        }
-        .category-filter {
-            margin: 10px;
-            padding: 10px;
-            background: #f8f8f8;
-            border-radius: 5px;
-            overflow-x: auto;
-            white-space: nowrap;
-        }
-        .category-filter label {
-            font-size: 14px;
-            padding: 6px 10px;
-            margin: 5px;
-            display: inline-block;
-            user-select: none;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-        .category-filter label:hover {
-            background: #e9f3ff;
-        }
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px;
-        }
-        #findNearbyBtn {
-            flex: 2;
-            padding: 12px;
-            margin-right: 5px;
-            background: #0078ff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        }
-        #deselectAllBtn {
-            flex: 1;
-            padding: 12px;
-            margin-left: 5px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #findNearbyBtn:hover {
-            background: #0056b3;
-        }
-        #deselectAllBtn:hover {
-            background: #c82333;
-        }
-        .info-window {
-            padding: 10px;
-            width: 250px;
-        }
-        .info-window strong {
-            display: block;
-            font-size: 16px;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        .info-window .info-item {
-            margin: 5px 0;
-        }
-        .info-window .website-link {
-            display: inline-block;
-            margin-top: 8px;
-            color: #0078ff;
-            text-decoration: underline;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>부천시 직업훈련기관 지도</title>
+  <style>
+    body {
+      margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif;
+    }
+    h1 {
+      padding: 15px; margin: 0; background-color: #0078ff; color: white; text-align: center;
+    }
+    #map {
+      width: 100%; height: 700px;
+    }
+    @media (max-width: 768px) {
+      #map { height: 500px; }
+    }
+    @media (max-width: 480px) {
+      #map { height: 400px; }
+      h1 { font-size: 20px; }
+    }
+    .category-filter {
+      margin: 10px; padding: 10px; background: #f8f8f8; border-radius: 5px;
+      overflow-x: auto; white-space: nowrap;
+    }
+    .category-filter label {
+      font-size: 14px; padding: 6px 10px; margin: 5px;
+      display: inline-block; user-select: none; background: #fff;
+      border: 1px solid #ddd; border-radius: 20px; cursor: pointer;
+    }
+    .category-filter label:hover {
+      background: #e9f3ff;
+    }
+    .button-container {
+      display: flex; gap: 10px; margin: 10px;
+    }
+    #findNearbyBtn {
+      flex: 2; padding: 12px; background: #0078ff; color: white;
+      border: none; border-radius: 5px; cursor: pointer;
+      font-size: 16px; font-weight: bold;
+    }
+    #deselectAllBtn {
+      flex: 1; padding: 12px; background: #dc3545; color: white;
+      border: none; border-radius: 5px; cursor: pointer;
+      font-size: 16px;
+    }
+    #findNearbyBtn:hover {
+      background: #0056b3;
+    }
+    #deselectAllBtn:hover {
+      background: #c82333;
+    }
+  </style>
 </head>
 <body>
     <h1>부천시 직업훈련기관 지도</h1>
@@ -248,7 +190,7 @@
                 
                 // 모든 마커 크기 원래대로 복원
                 markers.forEach(function(marker) {
-                    var category = marker.getTitle().split(':')[0];
+                    var category = marker.getTitle().split('(')[0].trim(); // 괄호 앞 부분만 추출
                     var imageSrc = getMarkerImageSrc(category);
                     var imageSize = new kakao.maps.Size(80, 80);
                     var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
@@ -262,8 +204,8 @@
                     var title = marker.getTitle();
                     
                     var instituteName = title;
-                    if (title && title.includes(':')) {
-                        instituteName = title.split(':')[1];
+                    if (title && title.includes('(')) {
+                        instituteName = title.split('(')[0].trim();
                     }
                     
                     console.log("가까운 기관 #" + (i+1) + ":", title, "거리:", distance.toFixed(1) + "km");
@@ -306,24 +248,21 @@
                     
                     var imageUrl = (originalImage && typeof originalImage.getUrl === 'function')
                         ? originalImage.getUrl()
-                        : 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png'; // 기본 마커 이미지 URL
-                    
-                    var highlightImage = new kakao.maps.MarkerImage(imageUrl, newSize);
-                    
-                    marker.setImage(highlightImage);
-                }
-            }
+                        : 'https://t1.daumcdn.net/
             // 직종별 이미지 경로 반환 함수
             function getMarkerImageSrc(category) {
-                if (category === 'IT') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_blue.png'; }
-                else if (category === '인테리어') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_brown.png'; }
-                else if (category === '요양돌봄') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_gray.png'; }
-                else if (category === '간호') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_skyblue.png'; }
-                else if (category === '공예') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_yellow.png'; }
-                else if (category === '기계정비용접') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_green.png'; }
-                else if (category === '요리') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_orange.png'; }
-                else if (category === '미용') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_purple.png'; }
-                else if (category === '애견미용') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_pink.png'; }
+                // 필터링 시 사용된 직종명과 일치하도록 trim()과 toLowerCase() 적용
+                const normalizedCategory = String(category).trim().toLowerCase();
+
+                if (normalizedCategory === 'it') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_blue.png'; }
+                else if (normalizedCategory === '인테리어') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_brown.png'; }
+                else if (normalizedCategory === '요양돌봄') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_gray.png'; }
+                else if (normalizedCategory === '간호') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_skyblue.png'; }
+                else if (normalizedCategory === '공예') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_yellow.png'; }
+                else if (normalizedCategory === '기계정비용접') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_green.png'; }
+                else if (normalizedCategory === '요리') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_orange.png'; }
+                else if (normalizedCategory === '미용') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_purple.png'; }
+                else if (normalizedCategory === '애견미용') { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_pink.png'; }
                 else { return 'https://raw.githubusercontent.com/whj80/whj80.github.io/main/marker_red.png'; }
             }
            
@@ -376,7 +315,7 @@
 
                     const hasMatchingCategory = normalizedCenterCategories.some(cat => normalizedFilter.includes(cat));
 
-                    // 필터링 로그 추가
+                    // 필터링 로그 추가 (필요시 주석 해제)
                     // console.log(`기관: ${center.훈련기관명}, 직종: ${centerCategories}, 필터: ${categoryFilter}, 매칭: ${hasMatchingCategory}`);
 
                     if (hasMatchingCategory) { // 일치하는 카테고리가 하나라도 있다면 마커 생성
@@ -392,7 +331,7 @@
 
                         bounds.extend(markerPosition);
                         
-                        // 마커 이미지: 대표 직종 (첫 번째 직종) 또는 기본 이미지 사용
+                        // 마커 이미지: 대표 직종 (첫 번째 직종) 또는 '기타' 카테고리 사용
                         const primaryCategoryForImage = centerCategories.length > 0 ? centerCategories[0] : '기타';
                         var imageSrc = getMarkerImageSrc(primaryCategoryForImage);
                         var imageSize = new kakao.maps.Size(80, 80);

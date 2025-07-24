@@ -68,7 +68,12 @@
 </head>
 <body>
     <h1>부천시 직업훈련기관 지도</h1>
-   
+   <div style="margin: 10px; padding: 10px; background: #f8f8f8; border-radius: 5px;">
+    <input type="text" id="addressInput" placeholder="예: 경기도 부천시 부일로 123" style="width: calc(100% - 20px); padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px;">
+    <button id="searchAddressBtn" style="width: 100%; padding: 10px; background: #009688; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        입력 주소로 가까운 기관 찾기
+    </button>
+</div>
     <!-- 직종별 필터 -->
     <div class="category-filter">
         <label><input type="checkbox" value="IT" checked> IT</label>
@@ -112,7 +117,9 @@
             // 인포윈도우 관련 변수
             var openInfowindow = null;
             var nearbyInfowindows = [];
-            
+            // 주소-좌표 변환 서비스 객체 생성 
+            var geocoder = new kakao.maps.services.Geocoder();
+
             // 내 주변 기관 정보창 모두 닫기 함수
             function closeAllNearbyInfowindows() {
                 nearbyInfowindows.forEach(function(infowindow) {
@@ -406,7 +413,41 @@
                 });
                 return selected;
             }
+// '입력 주소로 가까운 기관 찾기' 버튼 이벤트 연결
+document.getElementById('searchAddressBtn').addEventListener('click', function() {
+    var address = document.getElementById('addressInput').value; // 입력된 주소 가져오기
 
+    if (!address) {
+        alert('주소를 입력해주세요!');
+        return;
+    }
+
+    // 주소로 좌표를 검색
+    geocoder.addressSearch(address, function(result, status) {
+        if (status === kakao.maps.services.Status.OK) {
+            var coords = new kakao.maps.LatLng(result[0].y, result[0].x); // 검색된 좌표
+
+            // 지도 중심을 검색된 주소로 이동
+            map.setCenter(coords);
+
+            // 입력된 주소 위치에 마커 표시
+            new kakao.maps.Marker({
+                map: map,
+                position: coords,
+                image: new kakao.maps.MarkerImage(
+                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                    new kakao.maps.Size(24, 35)
+                )
+            });
+
+            // 기존 findNearbyTrainingCenters 함수를 재사용하여 가까운 기관 찾기
+            findNearbyTrainingCenters(coords);
+
+        } else {
+            alert('주소 검색에 실패했습니다. 올바른 주소를 입력해주세요.');
+        }
+    });
+});
             // 버튼 클릭 이벤트 연결
             document.getElementById('findNearbyBtn').addEventListener('click', getCurrentLocation);
             
